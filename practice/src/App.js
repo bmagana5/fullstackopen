@@ -12,21 +12,62 @@ const Button = ({ onClick, text }) => {
   );
 };
 
-const App = () => {
-  const [ counter, setCounter ] = useState(0);
+const History = ({ allClicks }) => {
+  if (allClicks.length === 0) {
+    return (
+      <div>
+        the app is used by pressing the buttons
+      </div>
+    );
+  }
+  return (
+    <div>
+      button press history: {allClicks.join(' ')}
+    </div>
+  );
+};
 
-  const increaseByOne = () => setCounter(counter + 1);
-  const setToZero = () => setCounter(0);
-  const decreaseByOne = () => setCounter(counter - 1);
+// complex state example
+// const App = () => {
+//   const [ clicks, setClicks ] = useState({ left: 0, right: 0 });
+
+//   const handleLeftClicks = () => setClicks({...clicks, left: clicks.left + 1});
+//   const handleRightClicks = () => setClicks({...clicks, right: clicks.right + 1});
+
+//   return (
+//     <div>
+//       <Display counter={clicks.left} />
+//       <Button onClick={handleLeftClicks} text={"left"}/>
+//       <Button onClick={handleRightClicks} text={"right"}/>
+//       <Display counter={clicks.right} />
+//     </div>
+//   );
+// };
+
+const App = () => {
+  const [ clicks, setClicks ] = useState({ left: 0, right: 0 });
+  const [ allClicks, setAll ] = useState([]);
+
+  const handleLeftClicks = () => {
+    setAll(allClicks.concat('L'));
+    setClicks({ ...clicks, left: clicks.left + 1 });
+  }
+
+  const handleRightClicks = () => {
+    setAll(allClicks.concat('R'));
+    setClicks({ ...clicks, right: clicks.right + 1 });
+  }
 
   return (
     <div>
-      <Display counter={counter}/>
-      <Button onClick={increaseByOne} text={"plus"} />
-      <Button onClick={setToZero} text={"zero"} />
-      <Button onClick={decreaseByOne} text={"minus"}/>
+      <Display counter={clicks.left}/>
+      <Display counter={clicks.right}/>
+      <Button onClick={handleLeftClicks} text={"left"}/>
+      <Button onClick={handleRightClicks} text={"right"}/>
+      <History allClicks={allClicks} />
     </div>
   );
+
 };
 
 export default App;
