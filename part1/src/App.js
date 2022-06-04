@@ -2,97 +2,77 @@ import { useState } from 'react';
 
 const Header = ({ text }) => <h1>{text}</h1>;
 
+const Anecdote = ({ anecdote }) => <p>{anecdote}</p>;
+
 const Button = ({ onClick, text }) => <button onClick={onClick}>{text}</button>;
 
-const StatisticLine = ({ text, value }) => <tr><td>{text}</td><td>{value}</td></tr>;
-
-const Total = ({ ratings }) => {
-  let sum = 0;
-  Object.keys(ratings).forEach(key => sum += ratings[key]);
+const VoteCount = ({ voteCount }) => {
+  if (voteCount === 0) {
+    return (
+      <></>
+    );
+  } else if (voteCount === 1) {
+    return (
+      <div>has {voteCount} vote</div>
+    );
+  }
   return (
-    <tr>
-      <td>all</td><td>{sum}</td>
-    </tr>
+    <div>has {voteCount} votes</div>
   );
 };
 
-const Average = ({ ratings }) => {
-  let sum = 0;
-  Object.keys(ratings).forEach(key => sum += ratings[key]);
-  let average = (ratings.good - ratings.bad) / sum;
-  if (isNaN(average)) {
+const Popular = ({ anecdotes, votes }) => {
+  let max = 0;
+  let max_i = -1;
+  for (let i = 0; i < votes.length; i++) {
+    if (votes[i] > max) {
+      max = votes[i];
+      max_i = i;
+    }
+  }
+  if (max_i === -1) {
     return (
-      <tr>
-        <td>average</td><td>0</td>
-      </tr>
+      <></>
     );
   }
   return (
-    <tr>
-      <td>average</td><td>{average}</td>
-    </tr>
-  )
-};
-
-const Positive = ({ ratings }) => {
-  let sum = 0;
-  Object.keys(ratings).forEach(key => sum += ratings[key])
-  let positive = ratings.good / sum * 100;
-  if (isNaN(positive)) {
-    return (
-      <tr>
-        <td>positive</td><td>0 %</td>
-      </tr>
-    );
-  }
-  return (
-    <tr>
-      <td>positive</td><td>{positive} %</td>
-    </tr>
-  );
-};
-
-const Statistics = ({ ratings }) => {
-  let sum = 0;
-  Object.keys(ratings).forEach(key => sum += ratings[key]);
-  if (sum === 0) {
-    return (
-      <div> 
-        No feedback given
-      </div>
-    );
-  }
-  return (
-    <table>
-      <tbody>
-        {Object.keys(ratings).map(key => <StatisticLine text={key} value={ratings[key]} key={key}/>)}
-        <Total ratings={ratings} />
-        <Average ratings={ratings} />
-        <Positive ratings={ratings} />
-      </tbody>
-    </table>
+    <div>
+      <Header text={"Anecdote with most votes"} />
+      <Anecdote anecdote={anecdotes[max_i]}/>
+      <VoteCount voteCount={votes[max_i]} />
+    </div>
   );
 };
 
 const App = () => {
-  const [ratings, setRatings] = useState({
-    good: 0,
-    neutral: 0,
-    bad: 0
-  });
+  const anecdotes = [
+    'If it hurts, do it more often',
+    'Adding manpower to a late software project makes it later!',
+    'The first 90 percent of the code accounts for the first 10 percent of the development time...The remaining 10 percent of the code accounts for the other 90 percent of the development time.',
+    'Any fool can write code that a computer can understand. Good programmers write code that humans can understand.',
+    'Premature optimization is the root of all evil.',
+    'Debugging is twice as hard as writing the code in the first place. Therefore, if you write the code as cleverly as possible, you are, by definition, not smart enough to debug it.',
+    'Programming without an extremely heavy use of console.log is same as if a doctor would refuse to use x-rays or blood tests when diagnosing patients'
+  ];
 
-  const handleGoodButton = () => setRatings({ ...ratings, good: ratings.good + 1});
-  const handleNeutralButton = () => setRatings({ ...ratings, neutral: ratings.neutral + 1});
-  const handleBadButton = () => setRatings({ ...ratings, bad: ratings.bad + 1});
+  const [selected, setSelected] = useState(0);
+  const [votes, setVotes] = useState(Array(anecdotes.length).fill(0));
+
+  const getRandomIndex = () => setSelected(Math.floor(Math.random() * anecdotes.length));
+  const updateVotes = (index) => {
+    const newArray = [...votes];
+    newArray[index] += 1;
+    setVotes(newArray);
+  };
 
   return (
     <div>
-      <Header text={"give feedback"} />
-      <Button onClick={handleGoodButton} text={"good"} />
-      <Button onClick={handleNeutralButton} text={"neutral"} />
-      <Button onClick={handleBadButton} text={"bad"} />
-      <Header text={"statistics"} />
-      <Statistics ratings={ratings} />
+      <Header text={"Anecdote of the day"} />
+      <Anecdote anecdote={anecdotes[selected]} />
+      <VoteCount voteCount={votes[selected]} />
+      <Button onClick={() => updateVotes(selected)} text={"vote"} />
+      <Button onClick={getRandomIndex} text={"next anecdote"}/>
+      <Popular anecdotes={anecdotes} votes={votes} />
     </div>
   );
 };
