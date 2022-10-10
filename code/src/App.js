@@ -1,55 +1,104 @@
-import Course from "./components/Course";
+import { useState } from "react";
+
+const Filter = ({ filterHandler, filterValue }) => {
+  return (
+    <div>
+    filter shown with <input onChange={filterHandler} value={filterValue}/>
+    </div>
+  );
+};
+
+const PersonForm = (props) => {
+  return (
+    <form onSubmit={props.submitHandler}>
+      <div>
+        name: <input onChange={props.nameHandler} value={props.nameValue}/>
+      </div>
+      <div>
+        number: <input onChange={props.numberHandler} value={props.numberValue}/>
+      </div>
+      <div>
+        <button type="submit">add</button>
+      </div>
+    </form>
+  );
+}
+
+const Persons = ({ persons, nameFilter }) => {
+  const filteredPersons = persons.filter(person => person.name.toLowerCase().includes(nameFilter.toLowerCase()));
+  return (
+    filteredPersons.map(person => <div key={person.id}>{person.name} {person.number}</div>)
+  );
+};
 
 const App = () => {
-  const courses = [
-    {
-      name: 'Half Stack application development',
-      id: 1,
-      parts: [
-        {
-          name: 'Fundamentals of React',
-          exercises: 10,
-          id: 1
-        },
-        {
-          name: 'Using props to pass data',
-          exercises: 7,
-          id: 2
-        },
-        {
-          name: 'State of a component',
-          exercises: 14,
-          id: 3
-        },
-        {
-          name: 'Redux',
-          exercises: 11,
-          id: 4
-        }
-      ]
-    }, 
-    {
-      name: 'Node.js',
-      id: 2,
-      parts: [
-        {
-          name: 'Routing',
-          exercises: 3,
-          id: 1
-        },
-        {
-          name: 'Middlewares',
-          exercises: 7,
-          id: 2
-        }
-      ]
+  const [persons, setPersons] = useState([{ name: 'Arto Hellas', number: '040-1234567', id: 1 }])
+  const [newName, setNewName] = useState('');
+  const [newPhoneNumber, setNewPhoneNumber] = useState('');
+  const [nameFilter, setNameFilter] = useState('');
+
+  const handleNameInput = (event) => {
+    setNewName(event.target.value);
+  };
+
+  const handleNumberInput = (event) => {
+    setNewPhoneNumber(event.target.value);
+  };
+
+  const handleFilterInput = (event) => {
+    setNameFilter(event.target.value);
+  };
+
+  const addNewName = (event) => {
+    event.preventDefault();
+    if (newName === '' || newPhoneNumber === '') {
+      alert('Please fill in the input fields');
+      return;
     }
-  ];
+    let duplicateName = persons.find(person => newName === person.name);
+    let duplicateNumber = persons.find(person => newPhoneNumber === person.number);
+    if (duplicateName === undefined && duplicateNumber === undefined) {
+      setPersons(persons.concat({ name: newName, number: newPhoneNumber, id: persons.length + 1 }));
+      setNewName('');
+      setNewPhoneNumber('');
+    } else {
+      let alertString = '';
+      let duplicateCounter = 0;
+      if (duplicateName) {
+        duplicateCounter += 1;
+        alertString += `The name '${newName}' `;
+      }
+      if (duplicateNumber) {
+        duplicateCounter += 1;
+        if (duplicateCounter === 2) {
+          alertString += `and the number '${newPhoneNumber}' `;
+        } else if (duplicateCounter === 1) {
+          alertString += `The number '${newPhoneNumber}' `;
+        }
+      }
+      if (duplicateCounter === 0) {
+        alert('an error has occurred');
+        return;
+      }
+      alertString += duplicateCounter === 2 ? 'are ' : 'is '; 
+      alertString += 'already added to the phonebook';
+      alert(alertString);
+    }
+  };
 
   return (
     <div>
-      <h1>Web development curriculum</h1>
-      <div>{courses.map(course => <Course key={course.id} course={course}/>)}</div>
+      <h2>Phonebook</h2>
+      <Filter filterHandler={handleFilterInput} filterValue={nameFilter}/>
+      <h2>add a new</h2>
+      <PersonForm submitHandler={addNewName} 
+                  nameHandler={handleNameInput} 
+                  numberHandler={handleNumberInput}
+                  nameValue={newName}
+                  numberValue={newPhoneNumber}/>
+
+      <h2>Numbers</h2>
+      <Persons persons={persons} nameFilter={nameFilter}/>
     </div>
   );
 };
