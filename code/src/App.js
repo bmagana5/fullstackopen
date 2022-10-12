@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import axios from 'axios';
 
 const Filter = ({ filterHandler, filterValue }) => {
   return (
@@ -32,10 +33,20 @@ const Persons = ({ persons, nameFilter }) => {
 };
 
 const App = () => {
-  const [persons, setPersons] = useState([{ name: 'Arto Hellas', number: '040-1234567', id: 1 }])
+  const [persons, setPersons] = useState([])
   const [newName, setNewName] = useState('');
   const [newPhoneNumber, setNewPhoneNumber] = useState('');
   const [nameFilter, setNameFilter] = useState('');
+
+  // use state effect to fetch data from db.json; this needs to be called only once after initial render
+  useEffect(() => {
+    axios
+      .get('http://localhost:3001/persons')
+      .then(response => {
+        setPersons(response.data);
+      });
+  }, []
+  );
 
   const handleNameInput = (event) => {
     setNewName(event.target.value);
