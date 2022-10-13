@@ -1,115 +1,126 @@
 import { useEffect, useState } from "react";
 import axios from 'axios';
 
-const Filter = ({ filterHandler, filterValue }) => {
-  return (
+
+const Filter = ({ searchFilterHandler, searchFilterValue }) => {
+  return(
     <div>
-    filter shown with <input onChange={filterHandler} value={filterValue}/>
+      find countries <input onChange={searchFilterHandler} value={searchFilterValue}/>
     </div>
   );
 };
 
-const PersonForm = (props) => {
+const Button = ({ countryName, buttonHandler}) => {
   return (
-    <form onSubmit={props.submitHandler}>
-      <div>
-        name: <input onChange={props.nameHandler} value={props.nameValue}/>
-      </div>
-      <div>
-        number: <input onChange={props.numberHandler} value={props.numberValue}/>
-      </div>
-      <div>
-        <button type="submit">add</button>
-      </div>
-    </form>
-  );
-}
-
-const Persons = ({ persons, nameFilter }) => {
-  const filteredPersons = persons.filter(person => person.name.toLowerCase().includes(nameFilter.toLowerCase()));
-  return (
-    filteredPersons.map(person => <div key={person.id}>{person.name} {person.number}</div>)
+    <button onClick={buttonHandler} value={countryName}>show</button>
   );
 };
 
-const App = () => {
-  const [persons, setPersons] = useState([])
-  const [newName, setNewName] = useState('');
-  const [newPhoneNumber, setNewPhoneNumber] = useState('');
-  const [nameFilter, setNameFilter] = useState('');
+const WeatherInfo = ({ weatherData }) => {
+  if (weatherData === undefined)
+    return (<></>);
+  else {
+    console.log('WeatherInfo component: ', weatherData)
+    const icon_img = `http://openweathermap.org/img/wn/${weatherData.weather[0].icon}@2x.png`;
+    return (
+      <div>
+        <h2>Weather in {weatherData.name}</h2>
+        <p>temperature {weatherData.main.temp}° Fahrenheit</p>
+        <img src={icon_img} alt={icon_img}/>
+        <p>{weatherData.weather[0].icon[-1] === 'd' ? 'Day' : 'Night'} time, {weatherData.weather[0].description}</p>
+        <p>wind {weatherData.wind.speed} m/s</p>
+      </div>
+    );
+  }
+};
 
-  // use state effect to fetch data from db.json; this needs to be called only once after initial render
+const CountryStats = ({ country, weatherData }) => {
+  return (
+    <div>
+      <h1>{country.name.common}</h1>
+      <div>capital <b>{country.capital[0]}</b></div>
+      <div>area <b>{country.area}</b></div>
+      <p><strong>languages:</strong></p>
+      <ul>
+        {Object.entries(country.languages).map(lang => <li key={lang[0]}>{lang[1]}</li>)}
+      </ul>
+      <div>
+        <img src={country.flags['png']} alt={country.flags['png']}/>
+      </div>
+      <WeatherInfo weatherData={weatherData} />
+    </div>
+  );
+};
+
+const CountriesDisplay = ({ filteredCountries, buttonHandler, weatherData }) => {
+  if (filteredCountries.length === 1) {
+    let country = filteredCountries[0];
+    return (
+      <CountryStats country={country} weatherData={weatherData}/>
+    );
+  } else if (filteredCountries.length <= 10 && filteredCountries.length > 0) {
+    return (
+      <div>
+        {filteredCountries.map(country => <div key={country.name.common}>{country.name.common} <Button countryName={country.name.common} buttonHandler={buttonHandler}/></div>)}
+      </div>
+    );
+  } else {
+    return (
+      <div>Too many searches, specify another filter</div>
+    ); 
+  }
+};
+
+const App = () => {
+  const [search, setSearch] = useState('');
+  const [countries, setCountries] = useState([]);
+  const [filteredCountries, setFilteredCountries] = useState([]);
+  const [weatherData, setWeatherData] = useState(undefined);
+
+  // generate list of countries with api call here
   useEffect(() => {
     axios
-      .get('http://localhost:3001/persons')
+      .get('https://restcountries.com/v3.1/all')
       .then(response => {
-        setPersons(response.data);
-      });
-  }, []
-  );
+        setCountries([].concat(response.data));
+      })
+  }, []);
 
-  const handleNameInput = (event) => {
-    setNewName(event.target.value);
-  };
-
-  const handleNumberInput = (event) => {
-    setNewPhoneNumber(event.target.value);
-  };
-
-  const handleFilterInput = (event) => {
-    setNameFilter(event.target.value);
-  };
-
-  const addNewName = (event) => {
-    event.preventDefault();
-    if (newName === '' || newPhoneNumber === '') {
-      alert('Please fill in the input fields');
-      return;
+  useEffect(() => {
+    if (filteredCountries.length === 1 && weatherData === undefined) {
+      console.log('retrieving weather data...');
+      const weatherCity = filteredCountries[0].capital[0];
+      const api_key = process.env.REACT_APP_API_KEY;
+      const url = `https://api.openweathermap.org/data/2.5/weather?q=${weatherCity}&appid=${api_key}&units=imperial`;
+      axios
+        .get(url)
+        .then(response => {
+          setWeatherData(response.data);
+        });
+    } else if (filteredCountries.length > 1) {
+      if (weatherData !== undefined) {
+        setWeatherData(undefined);
+      }
     }
-    let duplicateName = persons.find(person => newName === person.name);
-    let duplicateNumber = persons.find(person => newPhoneNumber === person.number);
-    if (duplicateName === undefined && duplicateNumber === undefined) {
-      setPersons(persons.concat({ name: newName, number: newPhoneNumber, id: persons.length + 1 }));
-      setNewName('');
-      setNewPhoneNumber('');
-    } else {
-      let alertString = '';
-      let duplicateCounter = 0;
-      if (duplicateName) {
-        duplicateCounter += 1;
-        alertString += `The name '${newName}' `;
-      }
-      if (duplicateNumber) {
-        duplicateCounter += 1;
-        if (duplicateCounter === 2) {
-          alertString += `and the number '${newPhoneNumber}' `;
-        } else if (duplicateCounter === 1) {
-          alertString += `The number '${newPhoneNumber}' `;
-        }
-      }
-      if (duplicateCounter === 0) {
-        alert('an error has occurred');
-        return;
-      }
-      alertString += duplicateCounter === 2 ? 'are ' : 'is '; 
-      alertString += 'already added to the phonebook';
-      alert(alertString);
-    }
+  }, [filteredCountries, weatherData]);
+
+  const searchFilterHandler = (event) => {
+    setSearch(event.target.value);
+    if (search !== '')
+      setFilteredCountries([].concat(countries.filter(country => country.name.common.toUpperCase().includes(search.toUpperCase()))));
+  };
+
+  const countryButtonHandler = (event) => {
+    console.log(event);
+    setSearch(event.target.value);
   };
 
   return (
     <div>
-      <h2>Phonebook</h2>
-      <Filter filterHandler={handleFilterInput} filterValue={nameFilter}/>
-      <h2>add a new</h2>
-      <PersonForm submitHandler={addNewName} 
-                  nameHandler={handleNameInput} 
-                  numberHandler={handleNumberInput}
-                  nameValue={newName}
-                  numberValue={newPhoneNumber}/>
-
-      <h2>Numbers</h2>
-      <Persons persons={persons} nameFilter={nameFilter}/>
+      <Filter searchFilterHandler={searchFilterHandler} searchFilterValue={search}/>
+      <CountriesDisplay filteredCountries={filteredCountries}
+                        buttonHandler={countryButtonHandler}
+                        weatherData={weatherData}/>
     </div>
   );
 };
