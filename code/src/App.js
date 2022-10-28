@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import axios from 'axios';
+import personService from './services/person';
 
 const Filter = ({ filterHandler, filterValue }) => {
   return (
@@ -25,10 +25,19 @@ const PersonForm = (props) => {
   );
 }
 
-const Persons = ({ persons, nameFilter }) => {
+const Persons = ({ persons, nameFilter, deleteCallback }) => {
   const filteredPersons = persons.filter(person => person.name.toLowerCase().includes(nameFilter.toLowerCase()));
+  const confirmDeletion = (name, id) => {
+    if (window.confirm(`Are you sure you want to delete entry for '${name}'?`)) {
+      deleteCallback(id)
+    }
+  };
   return (
-    filteredPersons.map(person => <div key={person.id}>{person.name} {person.number}</div>)
+    filteredPersons.map(person => 
+      <div key={person.id}>
+        {person.name} {person.number} <button onClick={() => confirmDeletion(person.name, person.id)}>Delete</button>
+      </div>
+    )
   );
 };
 
@@ -40,11 +49,7 @@ const App = () => {
 
   // use state effect to fetch data from db.json; this needs to be called only once after initial render
   useEffect(() => {
-    axios
-      .get('http://localhost:3001/persons')
-      .then(response => {
-        setPersons(response.data);
-      });
+    personService.getAll().then(fetchedPersons => setPersons(fetchedPersons));
   }, []
   );
 
@@ -69,32 +74,36 @@ const App = () => {
     let duplicateName = persons.find(person => newName === person.name);
     let duplicateNumber = persons.find(person => newPhoneNumber === person.number);
     if (duplicateName === undefined && duplicateNumber === undefined) {
-      setPersons(persons.concat({ name: newName, number: newPhoneNumber, id: persons.length + 1 }));
-      setNewName('');
-      setNewPhoneNumber('');
-    } else {
-      let alertString = '';
-      let duplicateCounter = 0;
-      if (duplicateName) {
-        duplicateCounter += 1;
-        alertString += `The name '${newName}' `;
+      const personObj = {
+        name: newName,
+        number: newPhoneNumber
       }
-      if (duplicateNumber) {
-        duplicateCounter += 1;
-        if (duplicateCounter === 2) {
-          alertString += `and the number '${newPhoneNumber}' `;
-        } else if (duplicateCounter === 1) {
-          alertString += `The number '${newPhoneNumber}' `;
+      personService.create(personObj).then(newPerson => {
+        setPersons(persons.concat(newPerson));
+      });
+    } else if (duplicateName && duplicateNumber === undefined) {
+        if (window.confirm(`'${duplicateName.name}' is already in the phonebook. Do you want to replace current number with a new one?`)) {
+          const duplicatePerson = persons.find(p => p.name.toLowerCase() === duplicateName.name.toLowerCase());
+          personService.update(duplicatePerson.id, {...duplicatePerson, number: newPhoneNumber})
+            .then(updatedPerson => {
+              setPersons(persons.map(p => p.id === updatedPerson.id ? updatedPerson : p));
+          });
         }
-      }
-      if (duplicateCounter === 0) {
-        alert('an error has occurred');
-        return;
-      }
-      alertString += duplicateCounter === 2 ? 'are ' : 'is '; 
-      alertString += 'already added to the phonebook';
-      alert(alertString);
+    } else if (duplicateName === undefined && duplicateNumber) {
+      alert('This phone number is already in use!');
+      return;
+    } else {
+      alert('This phonebook entry already exists.');
+      return;
     }
+    setNewName('');
+    setNewPhoneNumber('');
+  };
+
+  const removePerson = (id) => {
+    personService._delete(id).then(() => {
+      setPersons(persons.filter(p => p.id !== id));
+    });
   };
 
   return (
@@ -109,7 +118,7 @@ const App = () => {
                   numberValue={newPhoneNumber}/>
 
       <h2>Numbers</h2>
-      <Persons persons={persons} nameFilter={nameFilter}/>
+      <Persons persons={persons} nameFilter={nameFilter} deleteCallback={removePerson}/>
     </div>
   );
 };
