@@ -4,6 +4,16 @@ const server = express();
 // uses json-parser to make it possible to ready body of request 
 server.use(express.json());
 
+const requestLogger = (request, response, next) => {
+    console.log('Method:', request.method);
+    console.log('Path:  ', request.path);
+    console.log('Body:  ', request.body);
+    console.log('-------');
+    next();
+}
+
+server.use(requestLogger);
+
 let notes = [
     {
       id: 1,
@@ -74,7 +84,15 @@ server.delete('/api/notes/:id', (request, response) => {
     const id = Number(request.params.id);
     notes = notes.filter(n => n.id !== id);
     response.status(204).end();
-})
+});
+
+const unknownEndpoint = (request, response) => {
+    response.status(404).send({
+        error: 'unknown endpoint'
+    });
+};
+
+server.use(unknownEndpoint);
 
 const PORT = 3001;
 server.listen(PORT);
