@@ -1,18 +1,13 @@
 const express = require('express');
-const { appendFile } = require('fs');
+const morgan = require('morgan');
 const server = express();
 
 server.use(express.json());
 
-const requestLogger = (request, response, next) => {
-    console.log('Method:', request.method);
-    console.log('Path:  ', request.path);
-    console.log('Body:  ', request.body);
-    console.log('-------');
-    next();
-};
-
-server.use(requestLogger);
+morgan.token('body', (request, response) => {
+    return JSON.stringify(request.body);
+});
+server.use(morgan(':method :url :status :res[content-length] - :response-time ms :body'));
 
 let persons = [
     { 
