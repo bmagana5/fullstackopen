@@ -1,7 +1,14 @@
 const express = require('express');
+const cors = require('cors');
 const server = express();
 
-// uses json-parser to make it possible to ready body of request 
+// uses static middleware to allow for the server to serve a minified version of a web app
+server.use(express.static('build'));
+
+// uses cors middleware to allow for cross-origin resource sharing
+server.use(cors());
+
+// uses json-parser middleware to make it possible to ready body of request 
 server.use(express.json());
 
 const requestLogger = (request, response, next) => {
@@ -80,6 +87,25 @@ server.get('/api/notes/:id', (request, response) => {
     }
 });
 
+server.put('/api/notes/:id', (request, response) => {
+    const id = Number(request.params.id);
+    const body = request.body;
+    if (!body.content || !body.date || !body.id) {
+        response.status(400).json({
+            error: 'malformed content received; please double check submitted data'
+        });
+    } else {
+        const newNote = {
+            id: id,
+            content: body.content,
+            date: body.date,
+            important: body.important
+        }
+        notes = notes.map(n => n.id === id ? newNote: n);
+        response.json(newNote);
+    }
+});
+
 server.delete('/api/notes/:id', (request, response) => {
     const id = Number(request.params.id);
     notes = notes.filter(n => n.id !== id);
@@ -94,6 +120,7 @@ const unknownEndpoint = (request, response) => {
 
 server.use(unknownEndpoint);
 
-const PORT = 3001;
-server.listen(PORT);
-console.log(`Server is running on port ${PORT}`);
+const PORT = process.env.PORT || "8080";
+server.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
+});

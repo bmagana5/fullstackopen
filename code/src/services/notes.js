@@ -1,5 +1,9 @@
 import axios from 'axios';
-const baseUrl = 'http://localhost:3001/notes';
+
+// baseUrl doesn't need to include the domain
+// for production version, it will use server's domain
+// for dev version, setupProxy.js will ensure that this app can communicate with server
+const baseUrl = '/api/notes';
 
 const getAll = () => {
     const request = axios.get(baseUrl);

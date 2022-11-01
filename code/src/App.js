@@ -34,15 +34,7 @@ const App = () => {
   const [errorMessage, setErrorMessage] = useState('');
 
   useEffect(() => {
-    // noteService.getAll().then(initialNotes => setNotes(initialNotes));
-    noteService.getAll().then(initialNotes => {
-      setNotes(initialNotes.concat({
-        id: 1000,
-        content: "I am an impostor!",
-        date: "2022-1-17T17:30:31.098Z",
-        important: true
-      }));
-    });
+    noteService.getAll().then(initialNotes => setNotes(initialNotes));
   }, []);
 
   const notesToShow = showAll ? notes : notes.filter(note => note.important);

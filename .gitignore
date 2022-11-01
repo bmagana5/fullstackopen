@@ -1,2 +1,6 @@
 node_modules
 .env
+code/build
+backend/.dockerignore
+backend/Dockerfile
+backend/fly.toml
