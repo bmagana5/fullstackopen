@@ -12,3 +12,6 @@ Content-Type: application/json
     "name": "Shrek",
     "number": "2348-2342"
 }
+
+###
+GET https://still-bird-6039.fly.dev/api/persons
