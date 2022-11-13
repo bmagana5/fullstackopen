@@ -1,8 +1,11 @@
 ###
-DELETE http://localhost:3001/api/persons/1
+DELETE http://localhost:3001/api/notes/1
 
 ###
-GET http://localhost:3001/api/persons
+GET http://localhost:3001/api/notes
+
+###
+GET http://localhost:3001/api/notes/623d7e6b7995ba954da2d2dd
 
 ### 
 POST https://still-bird-6039.fly.dev/api/persons

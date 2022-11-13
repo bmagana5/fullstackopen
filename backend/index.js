@@ -1,6 +1,9 @@
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+const Note = require('./models/note');
 const server = express();
+
 
 // uses static middleware to allow for the server to serve a minified version of a web app
 server.use(express.static('build'));
@@ -42,6 +45,7 @@ let notes = [
     }
 ];
 
+
 const generateId = () => {
     let maxId = Math.floor(Math.random() * 1000);
     while (notes.find(n => n.id === maxId)) {
@@ -59,14 +63,14 @@ server.post('/api/notes', (request, response) => {
         });
     }
 
-    const note = {
+    const note = new Note({
         content: body.content,
         important: body.important || false,
-        date: new Date(),
-        id: generateId()
-    };
-    notes = notes.concat(note);
-    response.json(note);
+        date: new Date()
+    });
+    note.save().then(savedNote => {
+        response.json(savedNote);
+    });
 });
 
 server.get('/', (request, response) => {
@@ -74,17 +78,20 @@ server.get('/', (request, response) => {
 });
 
 server.get('/api/notes', (request, response) => {
-    response.json(notes);
+    Note.find({}).then(notes => {
+        response.json(notes);
+    });
 });
 
 server.get('/api/notes/:id', (request, response) => {
-    const id = Number(request.params.id);
-    const note = notes.find(n => n.id === id);
-    if (note) {
-        response.json(note);
-    } else {
-        response.status(404).end();
-    }
+        
+    Note.findById(request.params.id)
+        .then(note => {
+            response.json(note);
+        })
+        .catch(error => {
+            response.status(404).end();
+        });
 });
 
 server.put('/api/notes/:id', (request, response) => {
@@ -120,7 +127,7 @@ const unknownEndpoint = (request, response) => {
 
 server.use(unknownEndpoint);
 
-const PORT = process.env.PORT || "8080";
+const PORT = process.env.PORT || "3001";
 server.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
 });
