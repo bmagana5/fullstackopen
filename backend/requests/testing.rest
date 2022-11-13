@@ -1,14 +1,17 @@
-GET http://localhost:8080/api/notes
-
+###
+DELETE http://localhost:3001/api/persons/1
 
 ###
-DELETE http://localhost:3001/api/notes/3
+GET http://localhost:3001/api/persons
 
-###
-POST http://localhost:3001/api/notes
+### 
+POST https://still-bird-6039.fly.dev/api/persons
 Content-Type: application/json
 
 {
-    "content": "This is a message",
-    "important": false
+    "name": "Shrek",
+    "number": "2348-2342"
 }
+
+###
+GET https://still-bird-6039.fly.dev/api/persons
