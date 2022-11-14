@@ -18,3 +18,12 @@ Content-Type: application/json
 
 ###
 GET https://still-bird-6039.fly.dev/api/persons
+
+###
+PUT http://localhost:3001/api/notes/6246b261ff4a2ae3ad3df3d3
+Content-Type: application/json
+
+{
+    "important": true
+}
+

@@ -12,6 +12,7 @@ server.use(express.static('build'));
 server.use(cors());
 
 // uses json-parser middleware to make it possible to ready body of request 
+// note: must be loaded BEFORE all other middleware that make use of things like response.json()!
 server.use(express.json());
 
 const requestLogger = (request, response, next) => {
@@ -83,40 +84,40 @@ server.get('/api/notes', (request, response) => {
     });
 });
 
-server.get('/api/notes/:id', (request, response) => {
+server.get('/api/notes/:id', (request, response, next) => {
         
     Note.findById(request.params.id)
         .then(note => {
-            response.json(note);
+            if (note) {
+                response.json(note);
+            } else {
+                response.status(404).end();
+            }
         })
-        .catch(error => {
-            response.status(404).end();
-        });
+        .catch(error => next(error));
 });
 
-server.put('/api/notes/:id', (request, response) => {
-    const id = Number(request.params.id);
+server.put('/api/notes/:id', (request, response, next) => {
     const body = request.body;
-    if (!body.content || !body.date || !body.id) {
-        response.status(400).json({
-            error: 'malformed content received; please double check submitted data'
-        });
-    } else {
-        const newNote = {
-            id: id,
-            content: body.content,
-            date: body.date,
-            important: body.important
-        }
-        notes = notes.map(n => n.id === id ? newNote: n);
-        response.json(newNote);
+
+    const newNote = {
+        content: body.content,
+        important: body.important
     }
+    // use {new:true} to have updated note be returned by the Promise in then() as the updatedNote parameter in callback
+    Note.findByIdAndUpdate(request.params.id, newNote, { new: true })
+        .then(updatedNote => {
+            response.json(updatedNote);
+        })
+        .catch(error => next(error));
 });
 
-server.delete('/api/notes/:id', (request, response) => {
-    const id = Number(request.params.id);
-    notes = notes.filter(n => n.id !== id);
-    response.status(204).end();
+server.delete('/api/notes/:id', (request, response, next) => {
+    Note.findByIdAndRemove(request.params.id)
+        .then(() => {
+            response.status(204).end();
+        })
+        .catch(error => next(error));
 });
 
 const unknownEndpoint = (request, response) => {
@@ -126,6 +127,19 @@ const unknownEndpoint = (request, response) => {
 };
 
 server.use(unknownEndpoint);
+
+const errorHandler = (error, request, response, next) => {
+    console.error(error.message);
+    if (error.name === 'CastError') {
+        return response.status(400).send({ error: 'malformatted id' });
+    }
+
+    // if not a CastError, send to Express' default error handling middleware
+    next(error);
+};
+
+// load the errorHandler LAST
+server.use(errorHandler);
 
 const PORT = process.env.PORT || "3001";
 server.listen(PORT, () => {
