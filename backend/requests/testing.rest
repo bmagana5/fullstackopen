@@ -1,5 +1,8 @@
 ###
-DELETE http://localhost:3001/api/persons/1
+DELETE http://localhost:3001/api/persons/6370bd642b134a66a28b0e64
+
+###
+GET http://localhost:3001/info
 
 ###
 GET http://localhost:3001/api/persons
@@ -18,3 +21,11 @@ Content-Type: application/json
 
 ###
 GET https://still-bird-6039.fly.dev/api/persons
+
+### 
+PUT http://localhost:3001/api/persons/624b102f480d32914bb04afd
+Content-Type: application/json
+
+{
+    "number": "33-333333"
+}
