@@ -1,6 +1,8 @@
+require('dotenv').config();
 const express = require('express');
 const morgan = require('morgan');
 const cors = require('cors');
+const Person = require('./models/person');
 const server = express();
 
 server.use(express.json());
@@ -33,26 +35,36 @@ let persons = [
       name: "Mary Poppendieck", 
       number: "39-23-6423122"
     }
-]
+];
 
 server.get('/info', (request, response) => {
-    const d = new Date();
-    response.send(`Phonebook has info for ${persons.length} people<br/><br/>${d.toUTCString()}`);
-})
+    Person.find({})
+        .then(persons => {
+            const d = new Date();
+            response.send(`Phonebook has info for ${persons.length} people<br/><br/>${d.toUTCString()}`);
+        });
+});
 
 server.get('/api/persons', (request, response) => {
-    response.json(persons);
+    Person.find({})
+        .then(persons => {
+            response.json(persons);
+        })
 });
 
 server.get('/api/persons/:id', (request, response) => {
-    const id = Number(request.params.id);
-    const person = persons.find(p => p.id === id);
-
-    if (!person) {
-        response.status(404).end();
-    } else {
-        response.json(person);
-    }
+    Person.findById(request.params.id)
+        .then(person => {
+            if (person) {
+                response.json(person);
+            } else {
+                response.status(404).end();
+            }
+        })
+        .catch(error => {
+            console.log(error);
+            response.status(400).end({ error: 'malformatted id' });
+        });
 });
 
 server.delete('/api/persons/:id', (request, response) => {
@@ -71,7 +83,6 @@ const generateId = () => {
 };
 
 server.post('/api/persons/', (request, response) => {
-    const newId = generateId();
     const body = request.body;
     if (!body.name && !body.number) {
         return response.status(400).json({
@@ -90,13 +101,14 @@ server.post('/api/persons/', (request, response) => {
             error: 'name must be unique'
         });
     } else {
-        const person = {
-            id: newId,
+        const person = new Person({
             name: body.name,
             number: body.number
-        }
-        persons = persons.concat(person);
-        response.json(person);
+        });
+        person.save()
+            .then(savedPerson => {
+                response.json(savedPerson);
+            });
     }
 });
 
