@@ -110,8 +110,9 @@ const App = () => {
             setNotificationMessage('');
           }, 5000);
         })
-        .catch(() => {
-          setErrorMessage(`Information for ${personObj.name} has already been removed from the server.`);
+        .catch((error) => {
+          // setErrorMessage(`Information for ${personObj.name} has already been removed from the server.`);
+          setErrorMessage(error.response.data.error);
           setTimeout(() => {
             setErrorMessage('');
           }, 5000);
@@ -128,7 +129,8 @@ const App = () => {
               }, 5000);
             })
             .catch(error => {
-              setErrorMessage(`Information for ${duplicatePerson.name} has already been removed from the server.`);
+              // setErrorMessage(`Information for ${duplicatePerson.name} has already been removed from the server.`);
+              setErrorMessage(error.response.data.error);
               setTimeout(() => {
                 setErrorMessage('');
               }, 5000);
