@@ -8,16 +8,13 @@ GET http://localhost:3001/api/notes
 GET http://localhost:3001/api/notes/623d7e6b7995ba954da2d2dd
 
 ### 
-POST https://still-bird-6039.fly.dev/api/persons
+POST http://localhost:3001/api/notes
 Content-Type: application/json
 
 {
-    "name": "Shrek",
-    "number": "2348-2342"
+    "content": "lol, I love programming!"
 }
 
-###
-GET https://still-bird-6039.fly.dev/api/persons
 
 ###
 PUT http://localhost:3001/api/notes/6246b261ff4a2ae3ad3df3d3
