@@ -2,7 +2,7 @@ const config = require('./utils/config');
 const express = require('express');
 const app = express();
 const cors = require('cors');
-const notesRouter = require('./controllers/notes');
+const blogsRouter = require('./controllers/blogs');
 const middleware = require('./utils/middleware');
 const logger = require('./utils/logger');
 const mongoose = require('mongoose');
@@ -26,7 +26,7 @@ app.use(express.json());
 // use middleware that shows http request data on server's console
 app.use(middleware.requestLogger);
 // set the base path for the separate router to use
-app.use('/api/notes', notesRouter);
+app.use('/api/blogs', blogsRouter);
 app.use(middleware.unknownEndpoint);
 // load the errorHandler LAST
 app.use(middleware.errorHandler);
